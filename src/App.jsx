@@ -1,125 +1,50 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import ExpenseForm from './components/ExpenseForm';
+import SearchBar from './components/SearchBar';
+import ExpenseTable from './components/ExpenseTable';
+import './App.css';
 
-const App = () => {
+function App() {
   const [expenses, setExpenses] = useState([]);
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('description'); // Default sort by description
+  const [sortBy, setSortBy] = useState('');
 
-  // Handle form submission
-  const handleAddExpense = (e) => {
-    e.preventDefault();
-    if (description && amount && category) {
-      const newExpense = { description, amount, category };
-      setExpenses([...expenses, newExpense]);
-      setDescription('');
-      setAmount('');
-      setCategory('');
-    }
+  const handleAddExpense = (newExpense) => {
+    setExpenses([...expenses, newExpense]);
   };
 
-  // Handle search term change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  const handleDeleteExpense = (id) => {
+    const updatedExpenses = expenses.filter((expense) => expense.id !== id);
+    setExpenses(updatedExpenses);
   };
 
-  // Filter expenses based on search term
-  const filteredExpenses = expenses.filter(expense =>
-    expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Sort expenses based on selected criteria
-  const sortedExpenses = filteredExpenses.sort((a, b) => {
-    if (a[sortBy] < b[sortBy]) return -1;
-    if (a[sortBy] > b[sortBy]) return 1;
-    return 0;
-  });
-
-  // Handle delete expense
-  const handleDelete = (index) => {
-    setExpenses(expenses.filter((expense, i) => i !== index));
-  };
+  const filteredExpenses = expenses
+    .filter((expense) =>
+      expense.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortBy) return 0;
+      return a[sortBy].localeCompare(b[sortBy]);
+    });
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl text-center font-bold mb-4">Expense Tracker</h1>
-      
-      {/* Search Bar */}
-      <input
-        type="text"
-        placeholder="Search by description or category"
-        value={searchTerm}
-        onChange={handleSearchChange}
-        className="border p-2 mb-4 w-full"
-      />
-      
-      {/* Form for Adding Expenses */}
-      <form onSubmit={handleAddExpense} className="mb-4">
-        <div className="flex space-x-4 mb-2">
-          <input
-            type="text"
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="border p-2 w-full"
-          />
-          <input
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="border p-2 w-full"
-          />
-          <input
-            type="text"
-            placeholder="Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="border p-2 w-full"
-          />
-        </div>
-        <button type="submit" className="bg-blue-500 text-white p-2 w-full">Add Expense</button>
-      </form>
+    <div className="app-container">
+      <h1>Expense Tracker</h1>
+      <ExpenseForm onAddExpense={handleAddExpense} />
+      <SearchBar searchTerm={searchTerm} onSearch={setSearchTerm} />
 
-      {/* Sorting Options */}
-      <div className="mb-4">
-        <button onClick={() => setSortBy('description')} className="mr-2 bg-gray-300 p-2">Sort by Description</button>
-        <button onClick={() => setSortBy('category')} className="bg-gray-300 p-2">Sort by Category</button>
+      <div className="sort-controls">
+        <label>Sort by:</label>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option value="">None</option>
+          <option value="description">Description (A-Z)</option>
+          <option value="category">Category (A-Z)</option>
+        </select>
       </div>
 
-      {/* Expense Table */}
-      <table className="table-auto w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2 border">Description</th>
-            <th className="p-2 border">Amount</th>
-            <th className="p-2 border">Category</th>
-            <th className="p-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedExpenses.map((expense, index) => (
-            <tr key={index} className="border-b">
-              <td className="p-2">{expense.description}</td>
-              <td className="p-2">{expense.amount}</td>
-              <td className="p-2">{expense.category}</td>
-              <td className="p-2">
-                <button
-                  onClick={() => handleDelete(index)}
-                  className="bg-red-500 text-white p-2"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ExpenseTable expenses={filteredExpenses} onDelete={handleDeleteExpense} />
     </div>
   );
-};
+}
 
 export default App;
